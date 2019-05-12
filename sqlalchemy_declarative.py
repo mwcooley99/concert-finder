@@ -1,8 +1,9 @@
-import sqlalchemy
 from sqlalchemy import create_engine, Column, String, Integer, Float, \
     ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+
+from sqlalchemy.orm.session import sessionmaker
 
 import os
 
@@ -15,8 +16,12 @@ class Artist(Base):
     id = Column(String(50), primary_key=True)
     name = Column(String(100), nullable=False)
 
+    albums = relationship('Album', backref='artist')
+    tracks = relationship('Track', backref='artist')
+
     def __repr__(self):
-        return f'<Artist (id= {self.id}, name={self.name}>'
+        return f'<Artist (id= {self.id}, ' \
+            f'name={self.name}, albums={self.albums}, tracks={self.tracks}'
 
 
 class Album(Base):
@@ -26,11 +31,11 @@ class Album(Base):
     title = Column(String(150))
     artist_id = Column(String(50), ForeignKey('artists.id'))
 
-    # artist = relationship('Artist', back_populates='albums')
+    tracks = relationship('Track', backref='album')
 
     def __repr__(self):
         return f'<Album (id={self.id}, title={self.title} ' \
-            f'artist_id={self.artist_id}>'
+            f'artist_id={self.artist_id}, artist={self.artist}>'
 
 
 class Track(Base):
@@ -40,8 +45,7 @@ class Track(Base):
     title = Column(String(150))
     duration_ms = Column(Float)
     album_id = Column(String(50), ForeignKey('albums.id'))
-
-    # album = relationship('Album', back_populates='tracks')
+    artist_id = Column(String(50), ForeignKey('artists.id'))
 
     def __repr__(self):
         return f'<Track id={self.id}, title={self.title} ' \
@@ -53,3 +57,7 @@ engine = create_engine(
     f'mysql+pymysql://root:{db_password}@localhost:3306/music_db')
 
 Base.metadata.create_all(engine)
+
+Session = sessionmaker(bind=engine)
+session = Session()
+

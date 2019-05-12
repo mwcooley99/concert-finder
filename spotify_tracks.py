@@ -38,7 +38,7 @@ def clean_track(track):
               artist_id=track_artist['id']),
         Track(id=track['id'], title=track['name'],
               duration_ms=track['duration_ms'],
-              album_id=track_album['id'])
+              album_id=track_album['id'], artist_id=track_artist['id'])
     ]
     return track_data
 
