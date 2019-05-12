@@ -1,9 +1,8 @@
 import spotipy
 import spotipy.util as util
 
-from sqlalchemy import create_engine
-from sqlalchemy_declarative import Base, Artist, Track, Album, engine
-from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy_declarative import Artist, Track, Album, engine
+from sqlalchemy.orm.session import sessionmaker
 
 import os
 
