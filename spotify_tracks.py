@@ -1,7 +1,7 @@
 import spotipy
 import spotipy.util as util
 
-from sqlalchemy_declarative import Artist, Track, Album, engine
+from sqlalchemy_declarative import Artist, Track, Album, get_engine
 from sqlalchemy.orm.session import sessionmaker
 
 import os
@@ -66,7 +66,7 @@ token = get_token(username)
 if token:
     sp = spotipy.Spotify(auth=token)
     top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term')
-
+    engine = get_engine()
     session = make_session(engine)
 
     # Commit the artists, albums and tracks to the database

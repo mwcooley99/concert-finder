@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, String, Integer, Float, \
-    ForeignKey
+    ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -15,13 +15,16 @@ class Artist(Base):
 
     id = Column(String(50), primary_key=True)
     name = Column(String(100), nullable=False)
+    songkick_id = Column(Integer)
 
     albums = relationship('Album', backref='artist')
     tracks = relationship('Track', backref='artist')
+    events = relationship('Event', backref='artist')
 
     def __repr__(self):
         return f'<Artist (id= {self.id}, ' \
-            f'name={self.name}, albums={self.albums}, tracks={self.tracks}'
+            f'name={self.name}, songkick_id={self.songkick_id}, ' \
+            f'albums={self.albums}, tracks={self.tracks}'
 
 
 class Album(Base):
@@ -52,12 +55,45 @@ class Track(Base):
             f'album_id={self.album_id}>'
 
 
-db_password = os.environ['MYSQL_PASSWORD']
-engine = create_engine(
-    f'mysql+pymysql://root:{db_password}@localhost:3306/music_db')
+class Venues(Base):
+    __tablename__ = 'venues'
 
-Base.metadata.create_all(engine)
+    id = Column(Integer, primary_key=True)
 
-Session = sessionmaker(bind=engine)
-session = Session()
+    name = Column(String(150))
+    venue = Column(String(150))
+    city = Column(String(100))
 
+    events = relationship('Events', backref='venue')
+
+
+class Events(Base):
+    __tablename__ = 'events'
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime)
+    artist_id = Column(Integer, ForeignKey='artists.songkick_id')
+    venue_id = Column(Integer, ForeignKey='venues.id')
+
+
+def get_engine():
+    db_password = os.environ['MYSQL_PASSWORD']
+    return create_engine(
+        f'mysql+pymysql://root:{db_password}@localhost:3306/music_db')
+
+
+def get_session():
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+
+    return Session()
+
+
+if __name__ == '__main__':
+    engine = get_engine()
+
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    print(session.query(Artist).first())
