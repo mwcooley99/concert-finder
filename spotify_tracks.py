@@ -1,7 +1,17 @@
 import spotipy
 import spotipy.util as util
 
+from sqlalchemy import create_engine
+from sqlalchemy_declarative import Base, Artist, Track, Album, engine
+from sqlalchemy.orm.session import Session, sessionmaker
+
 import os
+
+
+def make_session(engine):
+    Session = sessionmaker(bind=engine)
+
+    return Session()
 
 
 def get_token(username):
@@ -15,34 +25,58 @@ def get_token(username):
     return util.prompt_for_user_token(username, scope, **credentials)
 
 
-def get_artist(track):
+def commit_artist(track, session, table):
     '''
-    Takes in a list of tracks and finds the unique artists contained within
-    :param tracks: list of track dicts --> format from Spotify API
-    :return: List of Artist Classes
+    :param track: Spotify track from API
+    :param session: database session
+    :return: None
     '''
+    track_artist = track['artists'][0]
+    artist = Artist(id=track_artist['id'], name=track_artist['name'])
+    artist_check = session.query(type(artist)).filter_by(id=artist.id).first()
+    # print(f'Type: {type(Artist)}')
 
-    return None
+    if artist_check is None:
+        session.add(artist)
+        session.commit()
+    else:
+        print(f'Artist {artist.name} is already in the database')
 
 
 def clean_track(track):
     '''
-    Format the tracks into Track Classes
-    :param tracks: list of track dicts --> format from Spotify API
-    :return: List of Track Classes
+    :param track: The spotify track
+    :return: List of objects in the form: [Artist, Album, Track]
     '''
+    track_artist = track['artists'][0]
+    track_album = track['album']
 
-    return None
+    track_data = [
+        Artist(id=track_artist['id'], name=track_artist['name']),
+        Album(id=track_album['id'], title=track_album['name'],
+              artist_id=track_artist['id']),
+        Track(id=track['id'], title=track['name'],
+              duration_ms=track['duration_ms'],
+              album_id=track_album['id'])
+    ]
+    return track_data
 
 
-def get_album(track):
+def commit(track_data, session):
     '''
-    Find all unique albums and turn them into album Classes
-    :param tracks: list of track dicts --> format from Spotify API
-    :return: List of Album classes
+    Checks the database for existing records and commits new records
+    :param track_data: in the form: [Artist, Album, Track]
+    :param session: The current SQLAlchemy session
     '''
+    for data in track_data:
+        data_type = type(data)
+        db_check = session.query(data_type).filter_by(id=data.id).first()
 
-    return None
+        if db_check is None:
+            session.add(data)
+            session.commit()
+        else:
+            print(f'{data} is already in the database')
 
 
 username = os.environ['USERNAME']
@@ -52,12 +86,13 @@ if token:
     sp = spotipy.Spotify(auth=token)
     top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term')
 
-    for k, v in top_tracks['items'][0].items():
-        print(k, v.keys)
+    session = make_session(engine)
 
-    artists = []
-    for track in top_tracks:
-        artists.append(get_artist(top_tracks))
+    # Commit the artists, albums and tracks to the database
+    for track in top_tracks['items']:
+        track_data = clean_track(track)
+        commit(track_data, session)
+
 
 else:
     print("Can't get token for", username)
