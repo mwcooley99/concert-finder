@@ -25,24 +25,6 @@ def get_token(username):
     return util.prompt_for_user_token(username, scope, **credentials)
 
 
-def commit_artist(track, session, table):
-    '''
-    :param track: Spotify track from API
-    :param session: database session
-    :return: None
-    '''
-    track_artist = track['artists'][0]
-    artist = Artist(id=track_artist['id'], name=track_artist['name'])
-    artist_check = session.query(type(artist)).filter_by(id=artist.id).first()
-    # print(f'Type: {type(Artist)}')
-
-    if artist_check is None:
-        session.add(artist)
-        session.commit()
-    else:
-        print(f'Artist {artist.name} is already in the database')
-
-
 def clean_track(track):
     '''
     :param track: The spotify track
