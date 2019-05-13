@@ -61,10 +61,12 @@ class Venue(Base):
     id = Column(Integer, primary_key=True)
 
     name = Column(String(150))
-    venue = Column(String(150))
     city = Column(String(100))
 
     events = relationship('Event', backref='venue')
+
+    def __repr__(self):
+        return f'<Venue id={self.id}, name={self.name}, city={self.city}>'
 
 
 class Event(Base):
@@ -77,7 +79,7 @@ class Event(Base):
 
     def __repr__(self):
         return f'<Event id={self.id}, date={self.date}, ' \
-            f'songkick_artist_id={self.songkick_artist_id}, venue_id={self.venue_id}'
+            f'songkick_artist_id={self.songkick_artist_id}, venue_id={self.venue_id}>'
 
 
 def get_engine():

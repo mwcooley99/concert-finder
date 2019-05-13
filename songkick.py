@@ -1,5 +1,5 @@
 import requests
-from sqlalchemy_declarative import Artist, Event, get_engine, get_session
+from sqlalchemy_declarative import Artist, Event, Venue, get_engine, get_session
 from datetime import datetime
 import test_values
 
@@ -24,6 +24,14 @@ def make_event(result):
 
     return Event(**event_dict)
 
+def make_venue(result):
+    venue_dict = {
+        'id': result['venue']['id'],
+        'name': result['venue']['displayName'],
+        'city': result['location']['city']
+    }
+
+    return Venue(**venue_dict)
 
 session = get_session()
 
@@ -54,3 +62,4 @@ for artist in session.query(Artist).all():
 # Verifies that the make_event method words
 result = test_values.results
 print(make_event(result['resultsPage']['results']['event'][0]))
+print(make_venue(result['resultsPage']['results']['event'][0]))
