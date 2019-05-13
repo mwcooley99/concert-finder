@@ -55,8 +55,8 @@ class Track(Base):
             f'album_id={self.album_id}>'
 
 
-class Venues(Base):
-    __tablename__ = 'venues'
+class Venue(Base):
+    __tablename__ = 'venue'
 
     id = Column(Integer, primary_key=True)
 
@@ -64,15 +64,20 @@ class Venues(Base):
     venue = Column(String(150))
     city = Column(String(100))
 
-    events = relationship('Events', backref='venue')
+    events = relationship('Event', backref='venue')
 
 
-class Events(Base):
-    __tablename__ = 'events'
+class Event(Base):
+    __tablename__ = 'event'
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime)
-    artist_id = Column(Integer, ForeignKey='artists.songkick_id')
-    venue_id = Column(Integer, ForeignKey='venues.id')
+    songkick_artist_id = Column(Integer, ForeignKey('artists.songkick_id'))
+    venue_id = Column(Integer, ForeignKey('venue.id'))
+
+    def __repr__(self):
+        return f'<Event id={self.id}, date={self.date}, ' \
+            f'songkick_artist_id={self.songkick_artist_id}, venue_id={self.venue_id}'
 
 
 def get_engine():
