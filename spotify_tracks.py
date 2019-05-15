@@ -5,6 +5,7 @@ from sqlalchemy_declarative import Artist, Track, Album, get_engine
 from sqlalchemy.orm.session import sessionmaker
 
 import os
+import settings
 
 
 def make_session(engine):

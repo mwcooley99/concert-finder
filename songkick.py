@@ -3,15 +3,16 @@ from sqlalchemy_declarative import Artist, Event, Venue, get_engine, get_session
 from datetime import datetime
 import test_values
 
+import os
+
 
 def get_search_base_url(search_for):
     return f'https://api.songkick.com/api/3.0/search/{search_for}.json'
 
 
-def get_songkick_artist_id(result):
-    artist = result['resultsPage']
+def get_songkick_artist_id(result_data):
 
-    return results['resultsPage']['results']['artist']['id']
+    return result_data['resultsPage']['results']['artist'][0]['id']
 
 
 def make_event(result):
@@ -38,16 +39,24 @@ session = get_session()
 # Loop through the Artists and find them in songkick
 url = get_search_base_url('artists')
 params = {
-    'apikey': '12345',
+    'apikey': os.environ['SONGKICK_API_KEY'],
     'query': 'The Beatles'
 }
+
+# TODO - decompose
 for artist in session.query(Artist).all():
     if artist.songkick_id is None:
         params['query'] = artist.name
         results = requests.get(url, params=params)
-        print(results.url)
-        # Need to add check if it returned anything
-        # artist.songkick_id = results['resultsPage']['results']['artist']['id']
+        results_data = results.json()
+
+        # Check if it returned an artist
+        try:
+            artist.songkick_id = get_songkick_artist_id(results_data)
+            print(artist.songkick_id)
+        except Exception as e:
+            print(e)
+
         # session.commit()
     else:
         print(f'{artist.name}\'s songkick_ID is already known')
@@ -60,6 +69,9 @@ for artist in session.query(Artist).all():
 # for artist in session.query(Artist).all():
 
 # Verifies that the make_event method words
-result = test_values.results
-print(make_event(result['resultsPage']['results']['event'][0]))
-print(make_venue(result['resultsPage']['results']['event'][0]))
+params['query'] = 'slkdjlskfdjlsjf'
+results = requests.get(url, params=params).json()
+try:
+    print(results['resultsPage']['results']['artist'][0]['id'])
+except Exception as e:
+    print(repr(e))
