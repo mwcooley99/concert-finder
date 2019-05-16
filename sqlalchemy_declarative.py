@@ -15,7 +15,7 @@ class Artist(Base):
 
     id = Column(String(50), primary_key=True)
     name = Column(String(100), nullable=False)
-    songkick_id = Column(Integer)
+    songkick_id = Column(Integer, unique=True)
 
     albums = relationship('Album', backref='artist')
     tracks = relationship('Track', backref='artist')
@@ -102,5 +102,7 @@ if __name__ == '__main__':
 
     Session = sessionmaker(bind=engine)
     session = Session()
+
+    print(Base.metadata.tables.keys())
 
 
