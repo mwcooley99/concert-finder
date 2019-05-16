@@ -42,71 +42,73 @@ def make_venue(event):
 
 
 # TODO - refactor and decompose this
-session = get_session()
+def run():
+    session = get_session()
 
-# Loop through the Artists and find them in songkick
-params_artist = {
-    'apikey': os.environ['SONGKICK_API_KEY']
-}
-params_venue = {
-    'apikey': os.environ['SONGKICK_API_KEY']
-}
+    # Loop through the Artists and find them in songkick
+    params_artist = {
+        'apikey': os.environ['SONGKICK_API_KEY']
+    }
+    params_venue = {
+        'apikey': os.environ['SONGKICK_API_KEY']
+    }
 
 
-for artist in session.query(Artist).all():
-    # TODO - decompose
-    url = get_search_base_url('artists')
-    if artist.songkick_id is None:
-        params_artist['query'] = artist.name
-        results = requests.get(url, params=params_artist)
-        results_data = results.json()
+    for artist in session.query(Artist).all():
+        # TODO - decompose
+        url = get_search_base_url('artists')
+        if artist.songkick_id is None:
+            params_artist['query'] = artist.name
+            results = requests.get(url, params=params_artist)
+            results_data = results.json()
 
-        # Check if it returned an artist
+            # Check if it returned an artist
+            try:
+                artist.songkick_id = get_songkick_artist_id(results_data)
+                print(artist.name)
+                print(artist.songkick_id)
+            except Exception as e:
+                print(e)
+                continue
+
+            # session.commit()
+        else:
+            print(f'{artist.name}\'s songkick_ID is already known')
+
+        # Get a result for the calendar
+        url = get_events_base_url(artist.songkick_id)
+        results = requests.get(url, params=params_venue).json()
+        print(json.dumps(results, indent=4))
+
+        # In case no results are returned
         try:
-            artist.songkick_id = get_songkick_artist_id(results_data)
-            print(artist.name)
-            print(artist.songkick_id)
+            events = results['resultsPage']['results']['event']
         except Exception as e:
-            print(e)
+            print(Exception)
             continue
 
-        # session.commit()
-    else:
-        print(f'{artist.name}\'s songkick_ID is already known')
+        # Parse and commit the venues and events to the database
+        for event in events:
+            # pass that result to the makeVenues function
+            curr_venue = make_venue(event)
+            # print(curr_venue)
+            db_check = session.query(Venue).filter_by(id=curr_venue.id).first()
+            if db_check is None:
+                print(f'Added {curr_venue}')
+                session.add(curr_venue)
+            else:
+                print(f'{curr_venue} already in DB')
+            # pass that result to the makeEvents function
+            curr_event = make_event(event, artist.songkick_id)
+            db_check = session.query(Event).filter_by(id=curr_event.id).first()
+            if db_check is None:
+                print(f'Added {curr_event}')
+                session.add(curr_event)
+            else:
+                print(f'{curr_event} is already in the db')
 
-    # Get a result for the calendar
-    url = get_events_base_url(artist.songkick_id)
-    results = requests.get(url, params=params_venue).json()
-    print(json.dumps(results, indent=4))
-
-    # In case no results are returned
-    try:
-        events = results['resultsPage']['results']['event']
-    except Exception as e:
-        print(Exception)
-        continue
-
-    # Parse and commit the venues and events to the database
-    for event in events:
-        # pass that result to the makeVenues function
-        curr_venue = make_venue(event)
-        # print(curr_venue)
-        db_check = session.query(Venue).filter_by(id=curr_venue.id).first()
-        if db_check is None:
-            print(f'Added {curr_venue}')
-            session.add(curr_venue)
-        else:
-            print(f'{curr_venue} already in DB')
-        # pass that result to the makeEvents function
-        curr_event = make_event(event, artist.songkick_id)
-        db_check = session.query(Event).filter_by(id=curr_event.id).first()
-        if db_check is None:
-            print(f'Added {curr_event}')
-            session.add(curr_event)
-        else:
-            print(f'{curr_event} is already in the db')
-
-        session.commit()
+            session.commit()
 
 
-
+if __name__ == '__main__':
+    run()

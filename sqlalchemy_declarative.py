@@ -95,7 +95,7 @@ def get_session():
     return Session()
 
 
-if __name__ == '__main__':
+def run():
     engine = get_engine()
 
     Base.metadata.create_all(engine)
@@ -103,6 +103,8 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    print(Base.metadata.tables.keys())
+
+if __name__ == '__main__':
+    run()
 
 

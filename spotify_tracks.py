@@ -61,20 +61,24 @@ def commit(track_data, session):
             print(f'{data} is already in the database')
 
 
-username = os.environ['USERNAME']
-token = get_token(username)
+def run():
+    username = os.environ['USERNAME']
+    token = get_token(username)
 
-if token:
-    sp = spotipy.Spotify(auth=token)
-    top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term')
-    engine = get_engine()
-    session = make_session(engine)
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term')
+        engine = get_engine()
+        session = make_session(engine)
 
-    # Commit the artists, albums and tracks to the database
-    for track in top_tracks['items']:
-        track_data = clean_track(track)
-        commit(track_data, session)
+        # Commit the artists, albums and tracks to the database
+        for track in top_tracks['items']:
+            track_data = clean_track(track)
+            commit(track_data, session)
+
+    else:
+        print("Can't get token for", username)
 
 
-else:
-    print("Can't get token for", username)
+if __name__ == '__main__':
+    run()
