@@ -2,7 +2,7 @@ import requests
 from sqlalchemy_declarative import Artist, Event, Venue, get_engine, \
     get_session
 from datetime import datetime
-import test_values
+
 
 import os
 import json
@@ -41,6 +41,7 @@ def make_venue(event):
     return Venue(**venue_dict)
 
 
+# TODO - refactor and decompose this
 session = get_session()
 
 # Loop through the Artists and find them in songkick
@@ -85,7 +86,7 @@ for artist in session.query(Artist).all():
         print(Exception)
         continue
 
-    # TODO
+    # Parse and commit the venues and events to the database
     for event in events:
         # pass that result to the makeVenues function
         curr_venue = make_venue(event)
