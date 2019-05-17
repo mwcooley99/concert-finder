@@ -8,8 +8,8 @@ For the Spotify API I used the spotipy module. I used the module to get my 50 mo
 ### Songkick
 For the Songkick API I made requets for Artists and Events. The urls used can be found here:
 #### Find an Artist:
-    - https://api.songkick.com/api/3.0/search/artists.json?apikey={your_api_key}&query={artist_name}
-```
+- https://api.songkick.com/api/3.0/search/artists.json?apikey={your_api_key}&query={artist_name}
+```javascript
   {
     "resultsPage": {
       "results": {
@@ -33,7 +33,7 @@ For the Songkick API I made requets for Artists and Events. The urls used can be
 #### Find an Event: 
 - https://api.songkick.com/api/3.0/events/{event_id}.json?apikey={your_api_key}
     
-``` javascript
+```javascript
 {
     "resultsPage": {
       "results": {
@@ -115,7 +115,7 @@ I used SQLAlchemy as an ORM and a MySQL database.
 I created Artist, Album, and Track models for the Spotify data.
 
 Here's the Artist Class:
-``` python
+```python
 class Artist(Base):
     __tablename__ = 'artists'
 
