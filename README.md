@@ -174,8 +174,9 @@ class Venue(Base):
 
     def __repr__(self):
         return f'<Venue id={self.id}, name={self.name}, city={self.city}>'
-```
+
 #### Event Class
+```
 class Event(Base):
     __tablename__ = 'event'
 
@@ -187,8 +188,12 @@ class Event(Base):
     def __repr__(self):
         return f'<Event id={self.id}, date={self.date}, ' \
             f'songkick_artist_id={self.songkick_artist_id}, venue_id={self.venue_id}>'
-
-
+```
+## Built With
+- [SQLAlchemy](https://docs.sqlalchemy.org/en/13/core/engines.html)
+- [Spotify API](https://developer.spotify.com/documentation/web-api/)
+- [Spotipy](https://spotipy.readthedocs.io/en/latest/)
+- [Songkick](https://www.songkick.com/developer)
     
   
 
