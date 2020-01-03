@@ -1,12 +1,12 @@
 # ETL Spotify and Songkick
 ## Description
-I used the Spotify and Songkick APIs to get my favorite tracks and get information about their upcoming shows. I created a MySQL database, transformed the data and loaded it into my db.
+Uses the Spotify and Songkick APIs to favorite tracks and information about their upcoming shows. This information is stored into a MySQL database.
 
 ## Extract
 ### Spotify
-For the Spotify API I used the spotipy module. I used the module to get my 50 most popular tracks. They came in the json format found here: [link](https://developer.spotify.com/documentation/web-api/reference/tracks/get-track/). 
+Uses the spotipy module. Pulls the user's 50 favorite tracks in the json format found here: [link](https://developer.spotify.com/documentation/web-api/reference/tracks/get-track/). 
 ### Songkick
-For the Songkick API I made requets for Artists and Events. The urls used can be found here:
+Pulls from SongKick's Artist and Events APIs:
 #### Find an Artist:
 - https://api.songkick.com/api/3.0/search/artists.json?apikey={your_api_key}&query={artist_name}
 ```javascript
@@ -107,14 +107,10 @@ For the Songkick API I made requets for Artists and Events. The urls used can be
   ```
 
 ## Transform
-The data came in json format so I had to traverse to find the data that I needed. In addition to that I needed to run the spotify queries first and load them into the database first so I could establish keys for my favorite artists.
-
-I used SQLAlchemy as an ORM and a MySQL database.
+Using SQLAlchemy the Spotify data is loaded into the database.
 
 ### Spotify
-I created Artist, Album, and Track models for the Spotify data.
-
-Here's the Artist Class:
+#### Artist Class:
 ```python
 class Artist(Base):
     __tablename__ = 'artists'
@@ -132,14 +128,65 @@ class Artist(Base):
             f'name={self.name}, songkick_id={self.songkick_id}, ' \
             f'albums={self.albums}, tracks={self.tracks}'
 ```
+#### Album Class
+```
+class Album(Base):
+    __tablename__ = 'albums'
+
+    id = Column(String(50), primary_key=True)
+    title = Column(String(150))
+    artist_id = Column(String(50), ForeignKey('artists.id'))
+
+    tracks = relationship('Track', backref='album')
+
+    def __repr__(self):
+        return f'<Album (id={self.id}, title={self.title} ' \
+            f'artist_id={self.artist_id}, artist={self.artist}>'
+```
+#### Track Class
+```
+class Track(Base):
+    __tablename__ = 'tracks'
+
+    id = Column(String(50), primary_key=True)
+    title = Column(String(150))
+    duration_ms = Column(Float)
+    album_id = Column(String(50), ForeignKey('albums.id'))
+    artist_id = Column(String(50), ForeignKey('artists.id'))
+
+    def __repr__(self):
+        return f'<Track id={self.id}, title={self.title} ' \
+            f'album_id={self.album_id}>'
+```
+
 ### Songkick
-I created Venue and Event Classes to handle this data
+#### Venue Class
+```
+class Venue(Base):
+    __tablename__ = 'venue'
 
-## Load
-I used a relational database. This seemed like the logical choice because known relationships between the data.
+    id = Column(Integer, primary_key=True)
 
-Using an ORM made the actual load process straightforward. The exception was the need to check before loading to avoid loading duplicate data. For example, if I've already Added the Rolling Stones to the Artist Table, I don't want to add them again. I used the Spotify and Songkick ID's since I knew they would be unique and would make future API calls simple in the future.
- 
+    name = Column(String(150))
+    city = Column(String(100))
+
+    events = relationship('Event', backref='venue')
+
+    def __repr__(self):
+        return f'<Venue id={self.id}, name={self.name}, city={self.city}>'
+```
+#### Event Class
+class Event(Base):
+    __tablename__ = 'event'
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime)
+    songkick_artist_id = Column(Integer, ForeignKey('artists.songkick_id'))
+    venue_id = Column(Integer, ForeignKey('venue.id'))
+
+    def __repr__(self):
+        return f'<Event id={self.id}, date={self.date}, ' \
+            f'songkick_artist_id={self.songkick_artist_id}, venue_id={self.venue_id}>'
 
 
     
